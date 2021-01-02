@@ -1,0 +1,170 @@
+<h1>Telecobrança</h1>
+<br />
+
+<table *ngIf="!Calculado">
+  <tr>
+    <td width="100">Título:</td>
+    <td>
+      <input type="text" [(ngModel)]="NumeroTitulo" maxlength="20"
+             (keydown)="this.NumeroTitulo=validacaoCampoNumerico.formatar_inteiro(this.NumeroTitulo,$event)"
+             (keyup)="validacaoCampoNumerico.habilitar_campo($event)" />
+    </td>
+  </tr>
+  <tr>
+    <td>Nome:</td>
+    <td><input type="text" [(ngModel)]="NomeDevedor" maxlength="100" /></td>
+  </tr>
+  <tr>
+    <td>CPF:</td>
+    <td>
+      <input type="text" [(ngModel)]="CPFDevedor" maxlength="11"
+             (keydown)="this.CPFDevedor=validacaoCampoNumerico.formatar_inteiro(this.CPFDevedor,$event)"
+             (keyup)="validacaoCampoNumerico.habilitar_campo($event)" />
+    </td>
+  </tr>
+  <tr>
+    <td>% de juros:</td>
+    <td>
+      <input type="text" [(ngModel)]="PercentualJuros" maxlength="6"
+             (keydown)="this.PercentualJuros=validacaoCampoNumerico.formatar_decimal(this.PercentualJuros,'.',',',$event,2)"
+             (keyup)="this.PercentualJuros=validacaoCampoNumerico.formatar_decimal_pos_backspace_delete(this.PercentualJuros,'.',',',$event,2)" />
+    </td>
+  </tr>
+  <tr>
+    <td>% de multa:</td>
+    <td>
+      <input type="text" [(ngModel)]="PercentualMulta" maxlength="6"
+             (keydown)="this.PercentualMulta=validacaoCampoNumerico.formatar_decimal(this.PercentualMulta,'.',',',$event,2)"
+             (keyup)="this.PercentualMulta=validacaoCampoNumerico.formatar_decimal_pos_backspace_delete(this.PercentualMulta,'.',',',$event,2)" />
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <table>
+        <tr>
+          <td colspan="4">
+            <br />
+            <b>Parcelas</b>
+          </td>
+        </tr>
+        <tr>
+          <td>Número</td>
+          <td>Valor</td>
+          <td>Vencimento</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>
+            <input type="number" [(ngModel)]="Parcela_Numero"
+                   (keydown)="this.Parcela_Numero=validacaoCampoNumerico.formatar_inteiro(this.Parcela_Numero,$event)"
+                   (keyup)="validacaoCampoNumerico.habilitar_campo($event)" />
+          </td>
+          <td>
+            <input type="text" [(ngModel)]="Parcela_Valor" maxlength="12"
+                   (keydown)="this.Parcela_Valor=validacaoCampoNumerico.formatar_decimal(this.Parcela_Valor,'.',',',$event,2)"
+                   (keyup)="this.Parcela_Valor=validacaoCampoNumerico.formatar_decimal_pos_backspace_delete(this.Parcela_Valor,'.',',',$event,2)" />
+          </td>
+          <td>
+            <input type="date" [(ngModel)]="Parcela_Vencimento" />
+          </td>
+          <td>
+            <button class="btn btn-primary btn-primary-cadastro"
+                    (click)="AdicionarParcela(Parcela_Numero,Parcela_Vencimento,Parcela_Valor)">
+              Adicionar
+            </button>
+          </td>
+        </tr>
+        <tr *ngFor="let parcela of Parcelas">
+          <td>{{ parcela.Numero }}</td>
+          <td>{{ parcela.Valor | currency:'BRL' }}</td>
+          <td>{{ parcela.Vencimento | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <button class="btn btn-primary btn-primary-cadastro"
+                    (click)="RemoverParcela(parcela.Numero)">
+              Remover
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" class="msg-erro">{{ Msg_Inclusao_Parcelas }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" class="msg-erro">{{ Msg_Calcular }}</td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <br />
+      <button class="btn btn-primary btn-primary-cadastro"
+              (click)="Calcular()">
+        Calcular
+      </button>
+    </td>
+  </tr>
+</table>
+
+
+<table *ngIf="Calculado">
+  <tr>
+    <td width="145">Número do Título:</td>
+    <td>{{ NumeroTitulo }}</td>
+  </tr>
+  <tr>
+    <td>Nome do Devedor:</td>
+    <td>{{ NomeDevedor }}</td>
+  </tr>
+  <tr>
+    <td>Qtde de Parcelas:</td>
+    <td>{{ Parcelas.length }}</td>
+  </tr>
+  <tr>
+    <td>Valor Original:</td>
+    <td>{{ TotalOriginal() | currency:'BRL' }}</td>
+  </tr>
+  <tr>
+    <td>Dias em Atraso:</td>
+    <td>{{ MaiorAtraso() }}</td>
+  </tr>
+  <tr>
+    <td>Valor Atualizado:</td>
+    <td>{{ TotalAtualizado() | currency:'BRL' }}</td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <table>
+        <tr>
+          <td colspan="7"><b>Parcelas</b></td>
+        </tr>
+        <tr>
+          <td>Número &nbsp;&nbsp;&nbsp;</td>
+          <td>Vencimento &nbsp;&nbsp;&nbsp;</td>
+          <td>Atraso &nbsp;&nbsp;&nbsp;</td>
+          <td>Valor Original &nbsp;&nbsp;&nbsp;</td>
+          <td>Juros &nbsp;&nbsp;&nbsp;</td>
+          <td>Multa &nbsp;&nbsp;&nbsp;</td>
+          <td>Total &nbsp;&nbsp;&nbsp;</td>
+        </tr>
+        <tr *ngFor="let parcela of Parcelas">
+          <td>{{ parcela.Numero }}</td>
+          <td>{{ parcela.Vencimento | date:'dd/MM/yyyy' }}</td>
+          <td>{{ parcela.Atraso }}</td>
+          <td>{{ parcela.Valor | currency:'BRL' }} &nbsp;&nbsp;&nbsp;</td>
+          <td>{{ parcela.Juros | currency:'BRL' }} &nbsp;&nbsp;&nbsp;</td>
+          <td>{{ parcela.Multa | currency:'BRL' }} &nbsp;&nbsp;&nbsp;</td>
+          <td>{{ parcela.Valor + parcela.Juros + parcela.Multa | currency:'BRL' }}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <br />
+      <button class="btn btn-primary btn-primary-cadastro"
+              (click)="Voltar()">
+        Voltar
+      </button>
+    </td>
+  </tr>
+</table>
